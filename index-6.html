@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>합격루트 AI | 자격증 맞춤 공부전략</title>
+<style>
+:root{--bg:#f6f8fc;--card:#fff;--text:#172033;--muted:#667085;--line:#e4e7ec;--brand:#3157d5;--soft:#eef2ff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--text)}
+header{background:#111936;color:#fff;padding:30px 18px}.wrap{max-width:900px;margin:auto}.badge{display:inline-block;background:#263566;padding:7px 11px;border-radius:999px;font-size:12px}
+h1{margin:12px 0 5px;font-size:32px}header p{margin:0;color:#cbd3ef;line-height:1.6}
+main{padding:22px 14px 50px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 8px 25px rgba(16,24,40,.05)}
+h2{font-size:20px;margin:0 0 6px}.desc{color:var(--muted);font-size:14px;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}
+label{font-weight:700;font-size:14px;display:block;margin-bottom:7px}input,select,textarea{width:100%;padding:13px;border:1px solid #d0d5dd;border-radius:11px;background:white;font:inherit;color:var(--text)}
+textarea{min-height:78px;resize:vertical}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+button,a.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:800;font-size:15px;cursor:pointer;text-decoration:none;text-align:center}
+.primary{background:var(--brand);color:white;flex:1}.secondary{background:var(--soft);color:#2844a4}.ghost{background:#f2f4f7;color:#344054}
+#result{display:none}.prompt{white-space:pre-wrap;background:#0d1327;color:#e7eaff;border-radius:14px;padding:17px;max-height:500px;overflow:auto;font-size:13px;line-height:1.55}
+.tip{background:#f8f9ff;border-left:4px solid var(--brand);padding:12px 14px;border-radius:8px;color:#475467;font-size:13px;line-height:1.6}
+footer{text-align:center;color:#98a2b3;font-size:12px;padding:10px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}h1{font-size:27px}.card{padding:17px}.actions{display:grid}.primary{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="badge">운영비 0원 · API 키 불필요</span><h1>합격루트 AI</h1><p>내 조건을 입력하면 실제 수험생 데이터 기반 자격증 분석용 마스터 프롬프트를 자동으로 완성합니다.</p></div></header>
+<main class="wrap">
+<section class="card">
+<h2>1. 내 조건 입력</h2><p class="desc">아는 것만 입력해도 됩니다. 빈 항목은 '없음/미정'으로 처리됩니다.</p>
+<div class="grid">
+<div class="full"><label>응시 자격증 *</label><input id="cert" placeholder="예: 공조냉동기계산업기사"></div>
+<div><label>준비 단계</label><select id="stage"><option>필기</option><option>실기</option><option>필기+실기</option></select></div>
+<div><label>관련 전공</label><input id="major" placeholder="예: 기계 / 비전공"></div>
+<div><label>현재 수준</label><select id="level"><option>완전 노베이스</option><option>기초 있음</option><option>관련 자격증 보유</option><option>전공자</option></select></div>
+<div><label>계산문제 수준</label><select id="calc"><option>노베이스</option><option>기초 있음</option><option>보통</option><option>자신 있음</option></select></div>
+<div><label>공부 가능 기간(일)</label><input id="days" type="number" min="1" value="30"></div>
+<div><label>하루 공부시간</label><input id="hours" type="number" min=".5" step=".5" value="3"></div>
+<div><label>목표</label><select id="goal"><option>안정적인 합격</option><option>단기 합격</option><option>고득점</option><option>실기까지 고려</option></select></div>
+<div><label>시험 예정일</label><input id="exam" placeholder="예: 2027년 1회차"></div>
+<div class="full"><label>이미 가지고 있는 교재·강의</label><input id="materials" placeholder="예: 건기원 교재"></div>
+<div><label>병행 중인 자격증</label><input id="parallel" placeholder="없으면 비워두기"></div>
+<div><label>보유 자격증</label><input id="owned" placeholder="예: 산업안전산업기사"></div>
+<div class="full"><label>기타 특이사항</label><textarea id="etc" placeholder="예: 계산문제에 시간을 많이 쓰기 어려움"></textarea></div>
+</div>
+<div class="actions"><button class="primary" onclick="makePrompt()">데이터 분석 프롬프트 만들기</button></div>
+</section>
+<section class="card" id="result">
+<h2>2. 완성된 프롬프트</h2><p class="desc">아래 내용을 복사해서 ChatGPT 새 채팅에 붙여넣으면 됩니다.</p>
+<div class="tip">💡 갤러리 실제 표본의 N·n·%를 우선 조사하고, 반복적으로 사용·추천되는 자료는 공식 링크까지 검증하도록 설계된 프롬프트입니다.</div>
+<div style="height:12px"></div><div id="prompt" class="prompt"></div>
+<div class="actions">
+<button class="primary" id="copyBtn" onclick="copyPrompt()">전체 프롬프트 복사</button>
+<a class="btn secondary" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT 열기</a>
+<button class="ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">조건 수정</button>
+</div>
+</section>
+</main>
+<footer>합격루트 AI · 데이터 기반 자격증 분석 프롬프트 생성기</footer>
+<script>
+const MASTER = "# 자격증 시험 데이터 기반 맞춤 공부법 분석\n\n아래 사용자 조건을 기준으로 해당 자격증의 실제 수험생 공부자료와 공부방법을 웹 검색하여 조사·분석해줘.\n\n## 사용자 조건\n- 응시 자격증: {{CERT}}\n- 준비 단계: {{STAGE}}\n- 관련 전공: {{MAJOR}}\n- 현재 수준: {{LEVEL}}\n- 계산문제 수준: {{CALC}}\n- 공부 가능 기간: {{DAYS}}일\n- 하루 평균 공부 가능 시간: {{HOURS}}시간\n- 목표: {{GOAL}}\n- 시험 예정일: {{EXAM}}\n- 이미 가지고 있는 교재·강의: {{MATERIALS}}\n- 병행 중인 자격증: {{PARALLEL}}\n- 보유 자격증: {{OWNED}}\n- 기타 특이사항: {{ETC}}\n\n# 핵심 조사 원칙\n이 분석의 중심은 AI의 일반적인 의견이 아니라 실제 수험생 데이터다.\n먼저 허용된 디시인사이드 갤러리에서 충분한 표본을 수집하여 누가 무엇을 사용했고, 어떻게 공부했고, 어떤 결과를 얻었는지를 N, n, %, 실제 사례와 근거 링크로 보여준다.\n그 다음에만 커뮤니티에서 반복적으로 사용되거나 추천되는 교재·강의·기출·CBT·복원자료를 정리하고 공식 출처에서 현재 정보를 검증한다.\n추천은 가능하지만 반드시 앞에서 확인한 커뮤니티 데이터에 근거해야 한다.\n\n# 1. 커뮤니티 조사 범위\n다음 순서로 조사한다.\n1) 해당 자격증 전용 디시인사이드 갤러리/마이너 갤러리가 실제 존재하는지 확인한다. 최근 2~3년 수험 관련 글이 충분하면 최우선 사용하며 갤러리 이름을 추측하지 않는다.\n2) 디시인사이드 자격증 갤러리\n3) 디시인사이드 한국폴리텍대학 갤러리\n전용 갤러리가 없거나 표본이 부족하면 2, 3으로 보완한다.\n다른 디시 갤러리, 네이버 카페, 블로그, 지식인, 유튜브 댓글, 광고성 후기는 커뮤니티 통계에서 제외한다.\nQ-Net·출판사·강의업체·강사 공식사이트·공식 유튜브는 시험정보·최신판·가격·강의시간·현재 링크 등 객관적 검증에 사용한다.\n\n# 2. 반드시 후보 발굴 → 역검색\nAI가 알고 있는 유명 교재·강의를 미리 정해놓고 검색하지 않는다.\n최근 2~3년의 상세 합격후기, 시험 직후 후기, 상세 불합격후기, 공부방법, 교재, 강의, 기출·CBT·복원 후기를 폭넓게 조사한다.\n게시글에서 등장하는 교재·문제집·강사·강의·유튜브·기출사이트·CBT사이트·복원자료·요약자료·암기자료의 정식명칭뿐 아니라 약칭·초성·별칭·은어를 모두 후보화한다.\n발견 후보마다 정식명칭 + 약칭 + 초성 + 별칭 + 강사명 + 자격증명 조합으로 다시 역검색한다.\n예를 들어 실제 게시글에서 '전트키', '강쌤' 같은 명칭이 발견되면 정체를 확인하고 반드시 추가 검색한다. 특정 자료가 유명할 것이라고 AI가 미리 가정해서는 안 된다.\n\n# 3. 게시글 데이터화\n각 유효 게시글에서 확인 가능한 범위로 작성시점, 합격/불합격/결과불명, 전공, 기존수준, 공부기간, 하루시간, 교재, 강의, 강사, 기출 개년, 회독, CBT, 복원자료, 계산방법, 암기방법, 오답방법, 시험점수, 장점, 단점, 게시글 링크를 추출한다.\n확인되지 않은 정보는 추정하지 말고 '확인 불가'로 둔다.\n\n# 4. 질문·언급·추천·실사용을 반드시 구분\n'전트키 어때?' → 질문 1건, 실제사용 0명\n'전트키 살까 다산 살까?' → 비교질문 1건, 실제사용 0명\n'전트키로 공부 중' → 실제사용 1명\n'전트키 듣고 7개년 3회독해서 합격' → 실제사용 1명 + 합격사용 1명\n'전트키 사용했지만 불합격' → 실제사용 1명 + 불합격사용 1명\n추천도 직접 사용 후 구체적 추천 / 구체적 추천 / 단순 추천·언급으로 구분한다.\n\n# 5. N, n, % 원칙\n실제 확인 표본으로만 계산하고 항목별 분모를 따로 공개한다.\n예: 전체 유효후기 N=63, 교재 확인 N=41, 강의 확인 N=29, 기출개년 확인 N=35, 회독 확인 N=27.\nA교재 18/41=43.9%처럼 표시한다.\n한 사람이 여러 자료를 사용했다면 다중응답으로 각각 1명 집계할 수 있으며 합계가 100%를 넘을 수 있다고 밝힌다.\n임의 퍼센트·예상 사용률·체감 사용률을 만들지 않는다.\n\n# 6. 표본 부족 전 검색 확장\n몇 건만 보고 표본 부족으로 끝내지 않는다.\n자격증 정식명칭 → 약칭 → 초성·은어 → 합격 → 불합격 → 필기/실기 후기 → 시험 직후 → 교재 → 강의 → 기출 → CBT → 복원 → 발견 교재명 역검색 → 강사명 역검색 → 강의명 역검색 순으로 확장한다.\n이를 수행한 뒤에도 적을 때만 '표본 부족(N=__)'이라고 표시한다.\n\n# 7. 갤러리별 집계\n가능하면 전문 갤러리 / 자격증 갤러리 / 한국폴리텍대학 갤러리 / 전체 통합을 각각 N, n, %로 보여준다. 표본이 적은 곳은 신뢰도 한계를 표시한다.\n\n# 8. 교재 실제 사용현황\n실제 발견된 의미 있는 교재를 모두 비교한다.\n커뮤니티 약칭, 정확한 교재명, 저자/강사, 출판사, 최신판, 실제사용 n/N(%), 합격사용 n, 불합격사용 n, 용도, 기출범위, 문제수, 설명수준, 계산설명, 최신 CBT/복원 대응, 반복 장점·단점, 주사용층, 공식 판매페이지, 현재 가격을 조사한다.\nAI가 유명하다고 생각하는 교재를 임의로 상위 배치하지 말고 실제 사용 데이터 기준으로 보여준다.\n\n# 9. 강의 실제 사용현황\n발견된 강사·강의를 비교한다.\n약칭, 강사, 정확한 강의명, 무료/유료, 강의수·시간, 실제사용 n/N(%), 합격·불합격 사용사례, 주로 듣는 과목/단원, 계산·노베·단기 평가, 교재연계, 반복 장점·단점을 조사한다.\n'공조산업기사는 강쌤의 ○○ 강의가 좋다', '계산 노베는 ○○강사의 △△ 파트가 좋다' 같은 의견이 반복되면 몇 건에서 확인됐는지 수치와 함께 보여준다.\n\n# 10. 강의·자료 링크 검증\n사용빈도가 높거나 구체적 추천 사례가 확인된 강의와 자료는 현재 접근 가능 여부를 공식 출처에서 검증한다.\n링크 우선순위: 개별 강의 직접 링크 > 공식 재생목록 > 공식 강의 페이지 > 공식 유튜브 채널 > 가장 직접적인 공식 페이지.\n강사 + 정확한 강의명 + 실제사용 n/N(%) + 긍정평가 n건 + 주사용 목적 + 필요한 강/단원 + 학습시간 + 무료/유료 + 실제 링크를 제공한다.\n삭제·비공개·검증되지 않은 주소를 만들지 않는다.\n\n# 11. 공부방법 실제 분포\n이론완강 후 기출 / 최소이론 후 기출 / 바로 기출 / 기출 중 모르는 부분만 이론을 각각 n/N과 결과로 보여준다.\n기출은 3개년 / 5개년 / 7개년 / 10개년 / 10년 이상을 n/N으로 집계한다.\n회독은 1 / 2 / 3 / 4~5 / 5회 이상을 n/N으로 집계한다.\n회독별 방법과 오답관리도 실제 후기에서 반복되는 내용만 정리하고 이상적인 방법을 임의 생성하지 않는다.\n\n# 12. 계산·암기·과목별 전략\n계산 전부 학습 / 빈출 계산만 / 어려운 계산 일부 포기 / 계산 대부분 포기를 사례 수와 합격·불합격 결과로 비교한다.\n어려운 과목, 과락 사례 과목, 점수 확보 과목, 계산 부담 과목, 암기로 점수를 확보한 과목도 실제 후기 근거로 정리한다.\n\n# 13. CBT·복원\n실제 발견된 자료별로 자료명, 업체/강사, 실제사용 n/N(%), 합격사용, 최신회차, 무료/유료, 문제수·범위, 적중 체감 후기, 과목별 체감, 장단점, 실제 링크를 조사한다.\n한 개인의 '70% 겹쳤다' 같은 말은 전체 적중률로 일반화하지 않는다.\n\n# 14. 합격·불합격 비교\n기출 다회독 합격/불합격, 이론 위주 합격/불합격, 답암기 합격/불합격, 복원의존 합격/불합격, 계산 일부포기 합격, 계산포기 과락, 노베 단기합격, 전공자 단기합격, 다른 자격증 병행 사례를 가능한 범위에서 비교한다.\n개인 사례와 반복 패턴을 구분한다.\n\n# 15. 사용자 유사조건 하위표본\n전체 데이터 뒤에 전공, 현재수준, 계산수준, 준비기간, 하루시간, 보유자격증, 병행자격증이 비슷한 사례를 별도 분석한다.\n조건을 너무 세분화해 N=1~2가 되면 단계적으로 조건을 완화한다.\n각 단계 N을 공개하고 하위표본에서도 교재, 강의, 기출개년, 회독, 공부시간, 합격/불합격을 n/N(%)로 집계한다.\n\n# 16. 데이터 기반 추천\n추천은 가능하지만 반드시 앞의 조사 결과에 근거한다.\nA. 커뮤니티에서 많이 사용되는 자료\nB. 커뮤니티에서 자주 추천되는 자료\nC. 사용자 유사조건에서 많이 사용되거나 긍정평가된 자료\n를 구분한다.\n예: '계산 노베 관련 유효후기 N=12 중 6명이 ○○강의를 사용했고 4건에서 계산 설명이 쉽다는 평가가 확인됐다. 비슷한 조건의 수험생들이 많이 선택한 강의로 볼 수 있다.'\n'내가 보기에는 ○○가 최고' 같은 근거 없는 추천은 금지한다.\n자료 간 차이가 충분하지 않으면 억지로 하나를 선정하지 않는다.\n\n# 17. 공식 검증\n시험과목, 합격기준, 시험시간, 출제기준·적용기간, CBT 여부는 Q-Net을 우선 확인한다.\n교재 최신판·가격·문제수, 강의명·강사명·강의시간·무료/유료·현재 접근 여부는 출판사·교육업체·강사 공식출처를 우선 확인한다.\n시험 예정일에 적용되는 출제기준 변경도 확인하고 오래된 기출의 활용가치를 실제 사례와 함께 설명한다.\n\n# 18. 최종 출력 순서\n① 조사 개요: 조사기간, 검색 갤러리, 확보 게시글 수, 유효 N, 합격 N, 불합격 N, 결과불명 N\n② 한눈에 보는 실제 수험생 데이터: 교재 TOP, 강의 TOP, 기출개년, 회독, CBT/복원, 주요 공부방식. 모두 n/N(%)\n③ 갤러리별 비교\n④ 교재 사용현황: 상위 하나만 말하지 말고 의미 있는 표본이 있는 자료 모두 비교\n⑤ 강의 사용현황: 강사+정확한 강의명+실제사용수+평가+검증된 링크\n⑥ 기출 공부현황\n⑦ 계산·암기·과목별 패턴\n⑧ CBT·복원 사용현황\n⑨ 합격 vs 불합격 사례\n⑩ 사용자와 비슷한 조건의 수험생 데이터\n⑪ 커뮤니티에서 반복적으로 추천되는 자료와 근거. 강의는 실제 링크 포함\n⑫ 사용자 조건 기준 참고 루트: 전체 데이터+유사조건 표본+반복 합격사례를 근거로 교재 → 강의 → 기출 → 회독 → CBT/복원 → 시험직전. 각 선택 옆에 근거 n/N 표시\n⑬ 입력 기간에 맞춘 DAY 1~시험 전날 일정. 강의는 정확한 강의·범위·시간·링크 연결. 병행 자격증이 있으면 시간배분\n⑭ 최종 데이터 요약: 가장 많이 사용된 교재/강의/기출범위/회독/CBT·복원, 합격 반복패턴, 불합격 위험패턴, 유사조건 자료, 반복 추천자료, 공식 링크\n\n마지막 한 줄:\n「유사조건 수험생에게서 가장 많이 관찰된 합격 준비 루트」\n교재 → 강의 → 기출 → 회독 → CBT/복원 → 최종정리 → 시험\n\n# 절대 금지\n검색 몇 건만 보고 전체 경향으로 표현 / AI가 기억하는 유명자료만 조사 / 약칭·초성·은어 누락 / 질문글을 실제 사용자로 집계 / 단순언급을 사용률에 포함 / 사용률·퍼센트 추정 생성 / 합격자만 조사 / 개인 적중체감을 전체 적중률로 일반화 / 공식확인 없이 최신판·가격·강의시간 작성 / 가짜 강의명·URL 생성 / 충분히 검색하지 않고 표본 부족 선언 / 커뮤니티 근거 없는 AI 선호 추천.\n\n핵심: 먼저 실제 수험생 데이터를 보여주고, 추천은 그 데이터 뒤에서 근거와 함께 한다. 확인할 수 없는 것은 추정하지 않는다.\n";
+const val=id=>document.getElementById(id).value.trim()||"없음/미정";
+function makePrompt(){
+ if(!document.getElementById("cert").value.trim()){alert("응시 자격증을 입력해주세요.");return;}
+ const map={CERT:val("cert"),STAGE:val("stage"),MAJOR:val("major"),LEVEL:val("level"),CALC:val("calc"),DAYS:val("days"),HOURS:val("hours"),GOAL:val("goal"),EXAM:val("exam"),MATERIALS:val("materials"),PARALLEL:val("parallel"),OWNED:val("owned"),ETC:val("etc")};
+ let out=MASTER; Object.entries(map).forEach(([k,v])=>out=out.replaceAll("{{"+k+"}}",v));
+ document.getElementById("prompt").textContent=out; document.getElementById("result").style.display="block";
+ document.getElementById("result").scrollIntoView({behavior:"smooth"});
+}
+async function copyPrompt(){
+ const text=document.getElementById("prompt").textContent;
+ try{await navigator.clipboard.writeText(text)}catch(e){const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()}
+ const b=document.getElementById("copyBtn");b.textContent="복사 완료 ✓";setTimeout(()=>b.textContent="전체 프롬프트 복사",1600);
+}
+</script></body></html>
